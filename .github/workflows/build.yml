@@ -19,3 +19,25 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Check if SONAR_TOKEN exists
+        run: |
+          if [ -z "${{ secrets.SONAR_TOKEN }}" ]; then
+            echo "SONAR_TOKEN is not set!"
+            exit 1
+          else
+            echo "SONAR_TOKEN exists and has length: ${#SONAR_TOKEN}"
+          fi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Verify SonarQube token validity
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $SONAR_TOKEN" $SONAR_HOST_URL/api/system/status)
+          if [ "$STATUS" == "200" ]; then
+            echo "SONAR_TOKEN is valid"
+          else
+            echo "SONAR_TOKEN validation failed with status $STATUS"
+            exit 1
+          fi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
